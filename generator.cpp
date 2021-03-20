@@ -2,9 +2,7 @@
 #include <vector>
 #include <cmath>
 static char *device = "default";            /* playback device */
-//unsigned char buffer[2*44100];              // some random data
-std::vector<uint8_t> buffer;
-
+std::vector<int32_t> buffer;
 
 enum WaveType{
     wave_Sin,
@@ -13,21 +11,27 @@ enum WaveType{
 
 // channel - 0(left) or 1(right)
 void generateSin(int channel, double freq, double phase, double volume, double samplingRate){
-    size_t counter = 0;
+    size_t period = 1/freq * samplingRate;
+    size_t phase_shift = period*phase/2;
+    size_t counter = phase_shift;
     for (size_t i = channel; i < buffer.size(); i+=2){
-        buffer[i] = volume*(sin(2*M_PI*freq * (counter/samplingRate) + phase)+1.0);
-	counter++;
+        if (i == 108){
+            int a = 6;
+        }
+        buffer[i] = (volume*sin(2*M_PI*freq * (counter/samplingRate)));
+	    counter++;
     }
 }
 
 
 // channel - 0(left) or 1(right)
 void generateSaw(int channel, double freq, double phase, double volume, double samplingRate){
-    size_t counter = phase;
     size_t period = 1/freq * samplingRate;
+    size_t phase_shift = period*phase/2;
+    size_t counter = phase_shift;
     double delta = 2.0 / period;
     for (size_t i = channel; i < buffer.size(); i+=2){
-        buffer[i] = volume*delta * (counter%period);
+        buffer[i] = (volume*delta * static_cast<double>(counter % period) - period*delta/2);
 	counter++;
     }
 }
@@ -42,8 +46,6 @@ void printHelp(){
 
 
 WaveType parseWaveType(const char* c){
-//    printf(c);
-  //  printf("\n");
     if (!strcmp(c, "sin")){
 	printf("parsed sin\n");
         return wave_Sin;
@@ -51,7 +53,6 @@ WaveType parseWaveType(const char* c){
 	printf("parsed saw\n");
         return wave_Saw;
     }
-
     return wave_Sin;
 }
 
@@ -66,12 +67,9 @@ int main(int argc, char* argv[])
     WaveType wTypeR = wave_Saw;
     double freqL = 440.0, freqR = 440.0;
     double phaseL = 0.0, phaseR = 0.0;
-    double volumeL = 50.0, volumeR = 50.0;
+    double volumeL = 50.0 * 1E+7, volumeR = 50.0 * 1E+7;
 
-    if (argc <= 2){
-        printHelp();
-
-    }else if (argc != 10){
+    if (argc != 10){
         printHelp();
 
     }else{
@@ -80,12 +78,12 @@ int main(int argc, char* argv[])
         wTypeL  = parseWaveType(argv[2]);
         freqL   = atof(argv[3]);
         phaseL  = atof(argv[4]);
-        volumeL = atof(argv[5]);
+        volumeL = atof(argv[5]) * 1E+7;
 
         wTypeR  = parseWaveType(argv[6]);
         freqR   = atof(argv[7]);
         phaseR  = atof(argv[8]);
-        volumeR = atof(argv[9]);
+        volumeR = atof(argv[9]) * 1E+7;
     }
     
     buffer.resize(2*samplingRate);
@@ -112,7 +110,7 @@ int main(int argc, char* argv[])
         exit(EXIT_FAILURE);
     }
     if ((err = snd_pcm_set_params(handle,
-                      SND_PCM_FORMAT_U8,
+                      SND_PCM_FORMAT_S32_LE,
                       SND_PCM_ACCESS_RW_INTERLEAVED,
                       2,
                       samplingRate,
@@ -121,6 +119,7 @@ int main(int argc, char* argv[])
         printf("Playback open error: %s\n", snd_strerror(err));
         exit(EXIT_FAILURE);
     }
+
     for (; ;) {
         frames = snd_pcm_writei(handle, (void*)(&buffer[0]), buffer.size()/2);
 	    printf("frames: %li\n", frames);
@@ -134,6 +133,7 @@ int main(int argc, char* argv[])
         if (frames > 0 && frames < buffer.size()/2)
             printf("Short write (expected %li, wrote %li)\n", buffer.size()/2, frames);
     }
+
     /* pass the remaining samples, otherwise they're dropped in close */
     err = snd_pcm_drain(handle);
     if (err < 0)
