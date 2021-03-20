@@ -3,7 +3,7 @@
 #include <cmath>
 static char *device = "default";            /* playback device */
 //unsigned char buffer[2*44100];              // some random data
-std::vector<uint32_t> buffer;
+std::vector<uint8_t> buffer;
 
 
 enum WaveType{
@@ -15,7 +15,7 @@ enum WaveType{
 void generateSin(int channel, double freq, double phase, double volume, double samplingRate){
     size_t counter = 0;
     for (size_t i = channel; i < buffer.size(); i+=2){
-        buffer[i] = htole32(volume*(sin(2*M_PI*freq * (counter/samplingRate) + phase)+1.0));
+        buffer[i] = volume*(sin(2*M_PI*freq * (counter/samplingRate) + phase)+1.0);
 	counter++;
     }
 }
@@ -27,7 +27,7 @@ void generateSaw(int channel, double freq, double phase, double volume, double s
     size_t period = 1/freq * samplingRate;
     double delta = 2.0 / period;
     for (size_t i = channel; i < buffer.size(); i+=2){
-        buffer[i] = htole32(volume*delta * (counter%period));
+        buffer[i] = volume*delta * (counter%period);
 	counter++;
     }
 }
@@ -112,7 +112,7 @@ int main(int argc, char* argv[])
         exit(EXIT_FAILURE);
     }
     if ((err = snd_pcm_set_params(handle,
-                      SND_PCM_FORMAT_S32_LE,
+                      SND_PCM_FORMAT_U8,
                       SND_PCM_ACCESS_RW_INTERLEAVED,
                       2,
                       samplingRate,
@@ -122,7 +122,7 @@ int main(int argc, char* argv[])
         exit(EXIT_FAILURE);
     }
     for (; ;) {
-        frames = snd_pcm_writei(handle, (void*)(&buffer[0]), buffer.size()/8);
+        frames = snd_pcm_writei(handle, (void*)(&buffer[0]), buffer.size()/2);
 	    printf("frames: %li\n", frames);
         if (frames < 0)
             frames = snd_pcm_recover(handle, frames, 0);
@@ -132,7 +132,7 @@ int main(int argc, char* argv[])
             break;
         }
         if (frames > 0 && frames < buffer.size()/8)
-            printf("Short write (expected %li, wrote %li)\n", buffer.size()/8, frames);
+            printf("Short write (expected %li, wrote %li)\n", buffer.size()/2, frames);
     }
     /* pass the remaining samples, otherwise they're dropped in close */
     err = snd_pcm_drain(handle);
