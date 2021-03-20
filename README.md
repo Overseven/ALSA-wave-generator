@@ -11,7 +11,7 @@ This generator works with 2 channels and S32 samples format.
 ### Descriptions
 
 - `<samplingRate>`:
-  - any integer value, which support your audio card
+  - any integer value, which supports your audio card
 
 - `<waveL>` and `<waveR>`
   - `sin`
