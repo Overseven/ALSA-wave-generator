@@ -37,7 +37,7 @@ void printHelp(){
     printf("Usage:\n");
     printf("  <samplingRate> <waveL> <freqL> <phaseL> <volumeL> <waveR> <freqR> <phaseR> <volumeR>\n\n");
     printf("Example:\n");
-    printf("  44100 sin 440 10 saw 440 10\n\n");
+    printf("  44100 sin 440 0 50 saw 440 0 50\n\n");
 }
 
 
