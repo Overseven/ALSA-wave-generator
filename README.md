@@ -32,9 +32,14 @@ This generator works with 2 channels and S32 samples format.
 ```
 ./generator 44100 sin 440 0 50 saw 440 0 50
 ```
+Two sin waves:
 
-![alt text](https://github.com/Overseven/ALSA-wave-generator/imags/1.png "Logo Title Text 1")
+![alt text](imgs/1.png "Two sinus")
 
-![alt text](https://github.com/Overseven/ALSA-wave-generator/imags/1.png "Logo Title Text 1")
+Two sinusoids in the opposite phase:
 
-![alt text](https://github.com/Overseven/ALSA-wave-generator/imags/1.png "Logo Title Text 1")
+![alt text](imgs/2.png "Two sinusoids in the opposite phase")
+
+Sin and saw waves:
+
+![alt text](imgs/3.png "Sin and saw waves")
