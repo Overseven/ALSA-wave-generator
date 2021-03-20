@@ -131,7 +131,7 @@ int main(int argc, char* argv[])
             printf("snd_pcm_writei failed: %s\n", snd_strerror(frames));
             break;
         }
-        if (frames > 0 && frames < buffer.size()/8)
+        if (frames > 0 && frames < buffer.size()/2)
             printf("Short write (expected %li, wrote %li)\n", buffer.size()/2, frames);
     }
     /* pass the remaining samples, otherwise they're dropped in close */
