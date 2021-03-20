@@ -32,3 +32,9 @@ This generator works with 2 channels and S32 samples format.
 ```
 ./generator 44100 sin 440 0 50 saw 440 0 50
 ```
+
+![alt text](https://github.com/Overseven/ALSA-wave-generator/imags/1.png "Logo Title Text 1")
+
+![alt text](https://github.com/Overseven/ALSA-wave-generator/imags/1.png "Logo Title Text 1")
+
+![alt text](https://github.com/Overseven/ALSA-wave-generator/imags/1.png "Logo Title Text 1")
