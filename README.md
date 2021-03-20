@@ -9,5 +9,5 @@
 ## Example
     
 ```
-./generator 44100 sin 440 10 saw 440 10
+./generator 44100 sin 440 0 50 saw 440 0 50
 ```
