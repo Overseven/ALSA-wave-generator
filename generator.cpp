@@ -7,10 +7,11 @@ std::vector<int32_t> buffer;
 enum WaveType{
     wave_Sin,
     wave_Saw,
+    wave_Tri
 };
 
 // channel - 0(left) or 1(right)
-void generateSin(int channel, double freq, double phase, double volume, double samplingRate){
+void generateSin(int channel, double freq, double phase, double gain, double samplingRate){
     size_t period = 1/freq * samplingRate;
     size_t phase_shift = period*phase/2;
     size_t counter = phase_shift;
@@ -18,28 +19,49 @@ void generateSin(int channel, double freq, double phase, double volume, double s
         if (i == 108){
             int a = 6;
         }
-        buffer[i] = (volume*sin(2*M_PI*freq * (counter/samplingRate)));
+        buffer[i] = (gain * sin(2 * M_PI * freq * (counter / samplingRate)));
 	    counter++;
     }
 }
 
 
 // channel - 0(left) or 1(right)
-void generateSaw(int channel, double freq, double phase, double volume, double samplingRate){
+void generateSaw(int channel, double freq, double phase, double gain, double samplingRate){
     size_t period = 1/freq * samplingRate;
     size_t phase_shift = period*phase/2;
     size_t counter = phase_shift;
     double delta = 2.0 / period;
     for (size_t i = channel; i < buffer.size(); i+=2){
-        buffer[i] = (volume*delta * static_cast<double>(counter % period) - period*delta/2);
-	counter++;
+        buffer[i] = (gain*delta * static_cast<double>(counter % period) - period*delta/2);
+	    counter++;
     }
 }
 
+// channel - 0(left) or 1(right)
+void generateTri(int channel, double freq, double phase, double gain, double samplingRate){
+    size_t period = 1/freq * samplingRate;
+    size_t phase_shift = period*phase/2;
+    size_t counter = phase_shift;
+    double delta = 2.0 / period;
+    for (size_t i = channel; i < buffer.size(); i+=2){
+        if (counter % period < period/4) {
+//            printf("first: ");
+            buffer[i] = gain * static_cast<double>(counter % period) / (static_cast<double>(period)/4);
+        } else if (counter % period < period/4*3) {
+//            printf("second: ");
+            buffer[i] = gain - gain * static_cast<double>((counter % period) - period/4) / (static_cast<double>(period)/4);
+        } else {
+//            printf("third: ");
+            buffer[i] = gain * static_cast<double>(counter % (period/4)) / (static_cast<double>(period)/4) - gain;
+        }
+//        printf("%d\n", buffer[i]);
+        counter++;
+    }
+}
 
 void printHelp(){
     printf("Usage:\n");
-    printf("  <samplingRate> <waveL> <freqL> <phaseL> <volumeL> <waveR> <freqR> <phaseR> <volumeR>\n\n");
+    printf("  <samplingRate> <waveL> <freqL> <phaseL> <gainL> <waveR> <freqR> <phaseR> <gainR>\n\n");
     printf("Example:\n");
     printf("  44100 sin 440 0 50 saw 440 0 50\n\n");
 }
@@ -47,11 +69,14 @@ void printHelp(){
 
 WaveType parseWaveType(const char* c){
     if (!strcmp(c, "sin")){
-	printf("parsed sin\n");
+	    printf("parsed sin\n");
         return wave_Sin;
-    }else if (!strcmp(c, "saw")) {
-	printf("parsed saw\n");
+    } else if (!strcmp(c, "saw")) {
+	    printf("parsed saw\n");
         return wave_Saw;
+    } else if (!strcmp(c, "tri")) {
+        printf("parsed tri\n");
+        return wave_Tri;
     }
     return wave_Sin;
 }
@@ -67,7 +92,7 @@ int main(int argc, char* argv[])
     WaveType wTypeR = wave_Saw;
     double freqL = 440.0, freqR = 440.0;
     double phaseL = 0.0, phaseR = 0.0;
-    double volumeL = 50.0 * 1E+7, volumeR = 50.0 * 1E+7;
+    double gainL = 50.0 * 1E+7, gainR = 50.0 * 1E+7;
 
     if (argc != 10){
         printHelp();
@@ -78,30 +103,36 @@ int main(int argc, char* argv[])
         wTypeL  = parseWaveType(argv[2]);
         freqL   = atof(argv[3]);
         phaseL  = atof(argv[4]);
-        volumeL = atof(argv[5]) * 1E+7;
+        gainL = atof(argv[5]) * 1E+7;
 
         wTypeR  = parseWaveType(argv[6]);
         freqR   = atof(argv[7]);
         phaseR  = atof(argv[8]);
-        volumeR = atof(argv[9]) * 1E+7;
+        gainR = atof(argv[9]) * 1E+7;
     }
     
     buffer.resize(2*samplingRate);
     
     // generate Left channel signal
     if (wTypeL == wave_Sin){
-        generateSin(0, freqL, phaseL, volumeL, samplingRate);
+        generateSin(0, freqL, phaseL, gainL, samplingRate);
 
     }else if (wTypeL == wave_Saw) {
-        generateSaw(0, freqL, phaseL, volumeL, samplingRate);
+        generateSaw(0, freqL, phaseL, gainL, samplingRate);
+
+    }else if (wTypeL == wave_Tri) {
+        generateTri(0, freqL, phaseL, gainL, samplingRate);
     }
 
     // generate Right channel signal
     if (wTypeR == wave_Sin){
-        generateSin(1, freqR, phaseR, volumeR, samplingRate);
+        generateSin(1, freqR, phaseR, gainR, samplingRate);
 
     }else if (wTypeR == wave_Saw) {
-        generateSaw(1, freqR, phaseR, volumeR, samplingRate);
+        generateSaw(1, freqR, phaseR, gainR, samplingRate);
+
+    }else if (wTypeR == wave_Tri) {
+        generateTri(1, freqR, phaseR, gainR, samplingRate);
     }
 
     
