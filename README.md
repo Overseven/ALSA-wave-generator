@@ -5,7 +5,7 @@ This generator works with 2 channels and S32 samples format.
 ## Params
 
 ```
-./generator  <samplingRate> <waveL> <freqL> <phaseL> <volumeL> <waveR> <freqR> <phaseR> <volumeR>
+./generator  <samplingRate> <waveL> <freqL> <phaseL> <gainL> <waveR> <freqR> <phaseR> <gainR>
 ```
 
 ### Descriptions
@@ -23,7 +23,7 @@ This generator works with 2 channels and S32 samples format.
 - `<phaseL>` and `<phaseR>`
   - float value, which corresponding to the number of half-periods
 
-- `<volumeL>` and `<volumeR>`
+- `<gainL>` and `<gainR>`
   - float value
   - this value will multiplicated by `1E+7`. Max value = `214`
 
