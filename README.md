@@ -16,6 +16,7 @@ This generator works with 2 channels and S32 samples format.
 - `<waveL>` and `<waveR>`
   - `sin`
   - `saw`
+  - `tri`
 
 - `<freqL>` and `<freqR>`
   - float value in range 16-20000 for the frequency of the sound that can be heard, or another if it supports your audio card
