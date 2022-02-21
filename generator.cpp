@@ -1,6 +1,8 @@
 #include "alsa/asoundlib.h"
 #include <vector>
 #include <cmath>
+#include <fstream>
+
 static char *device = "default";            /* playback device */
 std::vector<int32_t> buffer;
 
@@ -19,7 +21,7 @@ void generateSin(int channel, double freq, double phase, double gain, double sam
         if (i == 108){
             int a = 6;
         }
-        buffer[i] = (gain * sin(2 * M_PI * freq * (counter / samplingRate)));
+        buffer[i] = gain * sin(2 * M_PI * freq * (counter / samplingRate));
 	    counter++;
     }
 }
@@ -32,30 +34,24 @@ void generateSaw(int channel, double freq, double phase, double gain, double sam
     size_t counter = phase_shift;
     double delta = 2.0 / period;
     for (size_t i = channel; i < buffer.size(); i+=2){
-        buffer[i] = (gain*delta * static_cast<double>(counter % period) - period*delta/2);
+        buffer[i] = gain * delta * (counter % period) - period*delta/2;
 	    counter++;
     }
 }
 
 // channel - 0(left) or 1(right)
-void generateTri(int channel, double freq, double phase, double gain, double samplingRate){
-    size_t period = 1/freq * samplingRate;
-    size_t phase_shift = period*phase/2;
-    size_t counter = phase_shift;
-    double delta = 2.0 / period;
-    for (size_t i = channel; i < buffer.size(); i+=2){
-        if (counter % period < period/4) {
-//            printf("first: ");
-            buffer[i] = gain * static_cast<double>(counter % period) / (static_cast<double>(period)/4);
-        } else if (counter % period < period/4*3) {
-//            printf("second: ");
-            buffer[i] = gain - gain * static_cast<double>((counter % period) - period/4) / (static_cast<double>(period)/4);
+void generateTri(int channel, double freq, double phase, double gain, double samplingRate) {
+    size_t period = 1.0 / freq * samplingRate;
+    size_t phase_shift = period * phase / 2;
+    size_t counter = phase_shift % period;
+    for (size_t i = channel; i < buffer.size(); i += 2) {
+        if (counter < period / 2) {
+            buffer[i] = -gain + 2.0 * gain * counter / (period / 2.0);
         } else {
-//            printf("third: ");
-            buffer[i] = gain * static_cast<double>(counter % (period/4)) / (static_cast<double>(period)/4) - gain;
+            buffer[i] = gain - 2.0 * gain * (counter - period / 2.0) / (period / 2.0);
         }
-//        printf("%d\n", buffer[i]);
         counter++;
+        counter %= period;
     }
 }
 
@@ -146,7 +142,7 @@ int main(int argc, char* argv[])
                       2,
                       samplingRate,
                       1,
-                      1000000)) < 0) {   /* 1.0 sec */
+                      1000000)) < 0) {   // 1.0 sec
         printf("Playback open error: %s\n", snd_strerror(err));
         exit(EXIT_FAILURE);
     }
@@ -165,7 +161,7 @@ int main(int argc, char* argv[])
             printf("Short write (expected %li, wrote %li)\n", buffer.size()/2, frames);
     }
 
-    /* pass the remaining samples, otherwise they're dropped in close */
+    // pass the remaining samples, otherwise they're dropped in close
     err = snd_pcm_drain(handle);
     if (err < 0)
         printf("snd_pcm_drain failed: %s\n", snd_strerror(err));

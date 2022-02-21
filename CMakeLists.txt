@@ -6,4 +6,4 @@ set(CMAKE_CXX_STANDARD 14)
 add_executable(generator
         generator.cpp)
 
-target_link_libraries (generator -lasound -lm)
+#target_link_libraries (generator -lasound -lm)
